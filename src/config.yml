@@ -1,0 +1,23 @@
+placeByPlayer:
+  Global:
+  world:
+  - '1228'
+  - '1227'
+  - '1503'
+  - '2417:4'
+placeByPlayerDirectlyBelow:
+  Global:
+  world:
+  - '7,7'
+craftByPlayer:
+  Global:
+  world:
+playerBlockInteract:
+  Global: 
+  world:
+playerClickItemInventory:
+  Global:
+  world:
+playerPickupItem:
+  Global:
+  world:
