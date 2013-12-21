@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.listener.EventListener"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.listener.CommandListener"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.thirdparty.Metrics"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.util.SignLoader"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.config.Config"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.config.Messaging"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.util.Updater"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.thirdparty.Metrics.Graph"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.util.YamlLoader"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.proxy.CommandSenderProxy"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.proxy.PlayerProxy"/>
+<fullyQualifiedTypeName name="org.bukkit.plugin.PluginManager"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.thirdparty.Metrics.Plotter"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.util.SignText"/>
+<fullyQualifiedTypeName name="nz.co.LolNet.commandsign.util.PlayerState"/>
+</qualifiedTypeNameHistroy>

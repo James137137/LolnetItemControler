@@ -217,11 +217,10 @@ public class LolnetItemControler extends JavaPlugin {
             List<String> gBanList = (List<String>) config.getList("playerClickItemInventory.Global");
             List<String> banList = (List<String>) config.getList("playerClickItemInventory." + player.getWorld().getName());
             ItemStack[] contents = player.getInventory().getContents();
-            ItemStack[] ChestContents;
-            try {
+            ItemStack[] ChestContents = null;
+            if (event.getView().getTopInventory() != null)
+            {
                 ChestContents = event.getView().getTopInventory().getContents();
-            } catch (Exception e) {
-                ChestContents = null;
             }
             
             for (int i = 0; i < contents.length; i++) {

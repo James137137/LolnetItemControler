@@ -1,0 +1,1 @@
+You must put a blank sign on the wall thwn in chat type /cmdsign (command) then right click the sign.
