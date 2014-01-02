@@ -1,4 +1,8 @@
 name: LolnetItemControler
 main: nz.co.lolnet.james137137.LolnetItemControler.LolnetItemControler
-version: 0.2
+version: 0.21
 authors: [James Anderson]
+commands:
+  LolnetItemControlerDebug:
+    description: Debug Command
+    usage: /<command>

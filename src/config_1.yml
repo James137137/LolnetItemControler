@@ -1,29 +1,23 @@
 placeByPlayer:
   Global:
-  - '19'
   world:
-  - '2414:4'
-  - '19'
-  - '3256'
-  - '1937:15'
-  - '1938:6'
+  - '1228'
+  - '1227'
+  - '1503'
+  - '2417:4'
 placeByPlayerDirectlyBelow:
   Global:
-  - '3121,3131:1'
-  - '7,7'
-  - '3121,3131:15'
   world:
+  - '7,7'
 craftByPlayer:
   Global:
   world:
 playerBlockInteract:
-  Global:
+  Global: 
   world:
 playerClickItemInventory:
   Global:
   world:
 playerPickupItem:
   Global:
-  - '3256'
-  - '1938:6'
   world:
