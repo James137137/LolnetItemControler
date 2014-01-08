@@ -6,3 +6,6 @@ commands:
   LolnetItemControlerDebug:
     description: Debug Command
     usage: /<command>
+  LolnetItemControlerReload:
+    description: reload Command
+    usage: /<command>

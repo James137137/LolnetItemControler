@@ -27,3 +27,5 @@ playerPickupItem:
   - '3256'
   - '1938:6'
   world:
+GlobalCraftBan:
+  - '3120:3'

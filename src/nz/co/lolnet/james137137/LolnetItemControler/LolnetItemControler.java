@@ -6,7 +6,9 @@ package nz.co.lolnet.james137137.LolnetItemControler;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
@@ -31,6 +33,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.ShapedRecipe;
 
 /**
  *
@@ -47,12 +50,14 @@ public class LolnetItemControler extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(new myListener(this), this);
         String version = Bukkit.getServer().getPluginManager().getPlugin(this.getName()).getDescription().getVersion();
+        log.log(Level.INFO, "{0}: Version: {1} Enabled.", new Object[]{this.getName(), version});
+        removeRecipes();
+        getServer().getPluginManager().registerEvents(new myListener(this), this);
         saveDefaultConfig();
         config = getConfig();
         DebugMode = new HashMap<>();
-        log.log(Level.INFO, "{0}: Version: {1} Enabled.", new Object[]{this.getName(), version});
+        
     }
 
     @Override
@@ -79,6 +84,7 @@ public class LolnetItemControler extends JavaPlugin {
             return true;
         } else if (commandName.equalsIgnoreCase("LolnetItemControlerReload") && sender.hasPermission("LolnetItemControler.reload")) {
             config = getConfig();
+            removeRecipes();
             String version = Bukkit.getServer().getPluginManager().getPlugin(this.getName()).getDescription().getVersion();
             log.log(Level.INFO, "{0}: Version: {1} config reloaded.", new Object[]{this.getName(), version});
         }
@@ -447,5 +453,22 @@ public class LolnetItemControler extends JavaPlugin {
         }
 
         return false;
+    }
+
+    public void removeRecipes() {
+        
+        Iterator<Recipe> it = getServer().recipeIterator();
+        List<String> BanList = (List<String>) getConfig().getList("GlobalCraftBan");
+        while (it.hasNext()) {
+            Recipe itRecipe = it.next();
+            ItemStack itemStack = itRecipe.getResult();
+            int itemID = itemStack.getTypeId();
+            int meta = (int) itemStack.getData().getData();
+            if (isBanned(BanList, itemID, meta))
+            {
+                it.remove();
+                log.info("banned item:" + itemID + ":" + meta);
+            }
+        }
     }
 }
