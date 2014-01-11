@@ -271,14 +271,7 @@ public class LolnetItemControler extends JavaPlugin {
                 return;
             }
             ItemStack[] contents = player.getInventory().getContents();
-            ItemStack[] ChestContents = null;
-            if (event.getView().getTopInventory() != null) {
-                try {
-
-                    ChestContents = event.getView().getTopInventory().getContents();
-                } catch (Exception e) {
-                }
-            }
+            
 
             for (int i = 0; i < contents.length; i++) {
                 if (contents[i] != null) {
@@ -287,25 +280,10 @@ public class LolnetItemControler extends JavaPlugin {
                     boolean placedInChest = false;
                     if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                         if (!hasBypass(player, itemID, meta, "playerClickItemInventory")) {
-                            if (ChestContents != null) {
-                                for (int j = 0; j < ChestContents.length; j++) {
-                                    if (ChestContents[j] == null) {
-                                        ChestContents[j] = contents[i];
-                                        event.getView().getTopInventory().setContents(ChestContents);
-                                        placedInChest = true;
-                                        break;
-                                    }
-                                }
-                            }
-
                             contents[i] = null;
                             player.sendMessage(ChatColor.RED + "That Item is banned");
-                            if (placedInChest) {
-                                log.info("removed item:" + itemID + ":" + meta + " from player: " + player.getName() + " and placed in chest viewed by player.");
-                            }
-                            {
+                            
                                 log.info("removed item: " + itemID + ":" + meta + " from player: " + player.getName() + " gone forever.");
-                            }
                         }
                     }
                 }
