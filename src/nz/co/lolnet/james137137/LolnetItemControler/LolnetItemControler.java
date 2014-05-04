@@ -57,7 +57,7 @@ public class LolnetItemControler extends JavaPlugin {
         saveDefaultConfig();
         config = getConfig();
         DebugMode = new HashMap<>();
-        
+
     }
 
     @Override
@@ -105,16 +105,31 @@ public class LolnetItemControler extends JavaPlugin {
                 return;
             }
             Player player = event.getPlayer();
-            Boolean debugMode = DebugMode.get(player.getName());
-            if (debugMode == null) {
-                debugMode = false;
-            }
             Block block = event.getBlock();
-            if (player == null || block == null) {
+            if (block == null) {
                 return;
             }
             int itemID = block.getTypeId();
             int meta = (int) block.getData();
+            
+            if (player == null) {
+
+                List<String> gBanList = (List<String>) config.getList("placeByPlayer.Global");
+                List<String> banList = (List<String>) config.getList("placeByPlayer." + block.getWorld().getName());
+                if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
+                    return;
+                }
+                if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+            Boolean debugMode = DebugMode.get(player.getName());
+            if (debugMode == null) {
+                debugMode = false;
+            }
+            
+            
             if (debugMode) {
 
                 debug(player, debugMode, "" + itemID + ":" + meta);
@@ -271,7 +286,6 @@ public class LolnetItemControler extends JavaPlugin {
                 return;
             }
             ItemStack[] contents = player.getInventory().getContents();
-            
 
             for (int i = 0; i < contents.length; i++) {
                 if (contents[i] != null) {
@@ -282,8 +296,8 @@ public class LolnetItemControler extends JavaPlugin {
                         if (!hasBypass(player, itemID, meta, "playerClickItemInventory")) {
                             contents[i] = null;
                             player.sendMessage(ChatColor.RED + "That Item is banned");
-                            
-                                log.info("removed item: " + itemID + ":" + meta + " from player: " + player.getName() + " gone forever.");
+
+                            log.info("removed item: " + itemID + ":" + meta + " from player: " + player.getName() + " gone forever.");
                         }
                     }
                 }
@@ -434,7 +448,7 @@ public class LolnetItemControler extends JavaPlugin {
     }
 
     public void removeRecipes() {
-        
+
         Iterator<Recipe> it = getServer().recipeIterator();
         List<String> BanList = (List<String>) getConfig().getList("GlobalCraftBan");
         while (it.hasNext()) {
@@ -442,8 +456,7 @@ public class LolnetItemControler extends JavaPlugin {
             ItemStack itemStack = itRecipe.getResult();
             int itemID = itemStack.getTypeId();
             int meta = (int) itemStack.getData().getData();
-            if (isBanned(BanList, itemID, meta))
-            {
+            if (isBanned(BanList, itemID, meta)) {
                 it.remove();
                 log.info("banned item:" + itemID + ":" + meta);
             }
