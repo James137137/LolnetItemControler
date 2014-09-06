@@ -10,6 +10,12 @@ craftByPlayer:
 playerBlockInteract:
   Global:
   world:
+playerRightClickItem:
+  Global:
+  world:
+playerLeftClickItem:
+  Global:
+  world:
 playerClickItemInventory:
   Global:
   world:
@@ -17,4 +23,7 @@ playerPickupItem:
   Global:
   world:
 GlobalCraftBan:
+  Global:
+  world:
+DisableNetherPortalCreation: false
   
