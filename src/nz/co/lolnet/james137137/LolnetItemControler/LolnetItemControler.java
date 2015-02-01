@@ -1,14 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package nz.co.lolnet.james137137.LolnetItemControler;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
@@ -25,15 +21,15 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.inventory.ShapedRecipe;
 
 /**
  *
@@ -53,21 +49,18 @@ public class LolnetItemControler extends JavaPlugin {
         log = Bukkit.getLogger();
         String version = Bukkit.getServer().getPluginManager().getPlugin(this.getName()).getDescription().getVersion();
         log.log(Level.INFO, "{0}: Version: {1} Enabled.", new Object[]{this.getName(), version});
-        removeRecipes();
+
         getServer().getPluginManager().registerEvents(new myListener(this), this);
         saveDefaultConfig();
         config = getConfig();
         DebugMode = new HashMap<>();
+        removeRecipes();
 
     }
 
     @Override
     public void onDisable() {
         log.log(Level.INFO, "{0}: disabled", this.getName());
-    }
-
-    public static void main(String[] args) {
-        System.out.println(System.getenv("APPDATA"));
     }
 
     @Override
@@ -101,7 +94,7 @@ public class LolnetItemControler extends JavaPlugin {
         }
 
         @EventHandler
-        protected void onPlayerPlaceBlock(BlockPlaceEvent event) {
+        public void onPlayerBreakBlock(BlockBreakEvent event) {
             if (event.isCancelled()) {
                 return;
             }
@@ -110,51 +103,69 @@ public class LolnetItemControler extends JavaPlugin {
             if (block == null) {
                 return;
             }
-            int itemID = block.getTypeId();
-            int meta = (int) block.getData();
-
-            if (player == null) {
-
-                List<String> gBanList = (List<String>) config.getList("placeByPlayer.Global");
-                List<String> banList = (List<String>) config.getList("placeByPlayer." + block.getWorld().getName());
-                if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
-                    return;
-                }
-                if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
-                    event.setCancelled(true);
-                }
-                return;
-            }
-            Boolean debugMode = DebugMode.get(player.getName());
-            if (debugMode == null) {
-                debugMode = false;
-            }
-
-            if (debugMode) {
-
-                debug(player, debugMode, "" + itemID + ":" + meta);
-                debug(player, debugMode, "has bypass " + hasBypass(player, itemID, meta, "placeByPlayer"));
-                debug(player, debugMode, "World = " + player.getWorld().getName());
-            }
-            if (hasBypass(player, itemID, meta, "placeByPlayer")) {
-                return;
-            }
-            List<String> gBanList = (List<String>) config.getList("placeByPlayer.Global");
-            List<String> banList = (List<String>) config.getList("placeByPlayer." + player.getWorld().getName());
-            if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
-                return;
-            }
-            if (debugMode) {
-                debug(player, debugMode, "Gban = " + isBanned(gBanList, itemID, meta));
-                debug(player, debugMode, "world Ban = " + isBanned(banList, itemID, meta));
-            }
-
-            if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
-                player.sendMessage(ChatColor.RED + "you can't place with that in this world");
+            if (config.getBoolean("BlockAllBreakingBlocks") && !player.isOp())
+            {
                 event.setCancelled(true);
-            } else {
+            }
+        }
+        @EventHandler
+        public void onPlayerPlaceBlock(BlockPlaceEvent event) {
+
+            if (event.isCancelled()) {
                 return;
             }
+            Player player = event.getPlayer();
+            Block block = event.getBlock();
+            if (block == null) {
+                return;
+            }
+            String itemID = block.getType().toString();
+                String meta = Integer.toString((int)block.getData());
+                if (player == null) {
+
+                    List<String> gBanList = (List<String>) config.getList("placeByPlayer.Global");
+                    List<String> banList = (List<String>) config.getList("placeByPlayer." + block.getWorld().getName());
+                    if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
+                        return;
+                    }
+                    if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                    
+                }
+                Boolean debugMode = DebugMode.get(player.getName());
+                if (debugMode == null) {
+                    debugMode = false;
+                }
+
+                if (debugMode) {
+                    debug(player, debugMode, "" + itemID + "~" + meta);
+                    debug(player, debugMode, "has bypass " + hasBypass(player, itemID, meta, "placeByPlayer"));
+                    debug(player, debugMode, "World = " + player.getWorld().getName());
+                }
+                if (!hasBypass(player, itemID, meta, "placeByPlayer")) {
+                    List<String> gBanList = (List<String>) config.getList("placeByPlayer.Global");
+                    List<String> banList = (List<String>) config.getList("placeByPlayer." + player.getWorld().getName());
+                    if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
+
+                    } else {
+                        if (debugMode) {
+                            debug(player, debugMode, "Gban = " + isBanned(gBanList, itemID, meta));
+                            debug(player, debugMode, "world Ban = " + isBanned(banList, itemID, meta));
+                        }
+
+                        if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
+                            player.sendMessage(ChatColor.RED + "you can't place with that in this world");
+                            event.setCancelled(true);
+                            return;
+                        }
+                    }
+
+                }
+
+            
+
         }
 
         @EventHandler
@@ -162,13 +173,27 @@ public class LolnetItemControler extends JavaPlugin {
             if (event.isCancelled()) {
                 return;
             }
+
             Player player = event.getPlayer();
             Block topBlock = event.getBlock();
+            Boolean debugMode = DebugMode.get(player.getName());
+            if (debugMode == null) {
+                debugMode = false;
+            }
+            if (debugMode) {
+                player.sendMessage("onPlayerPlaceBlockOnTop Event");
+            }
             if (player == null || topBlock == null) {
+                if (debugMode) {
+                    player.sendMessage("player == null || topBlock == null = return;");
+                }
                 return;
             }
             Location location = topBlock.getLocation();
             if (player.isOp()) {
+                if (debugMode) {
+                    player.sendMessage("player.isOp() = return;");
+                }
                 return;
             }
             /*if (hasBypass(player, topItemID, topMeta, "placeByPlayerDirectlyBelow")) {
@@ -177,58 +202,83 @@ public class LolnetItemControler extends JavaPlugin {
             List<String> gBanList = (List<String>) config.getList("placeByPlayerDirectlyBelow.Global");
             List<String> banList = (List<String>) config.getList("placeByPlayerDirectlyBelow." + player.getWorld().getName());
             if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
+                if (debugMode) {
+                    player.sendMessage("(gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty()) = return;");
+                }
                 return;
             }
-            if (checkallSides(location, player, topBlock))
-            {
-                player.sendMessage(ChatColor.RED + "you can't place that block above of the block below in this world");
+            if (checkallSides(location, player, topBlock, debugMode)) {
+                player.sendMessage(ChatColor.RED + "You can't place that block next to the other block");
+                if (debugMode) {
+                    player.sendMessage("checkallSides() = setCancelled");
+                }
                 event.setCancelled(true);
-                log.info("[LolnetItemControler]: " + player.getName() + "tried to place item: " + topBlock.getTypeId() + ":" + ((int) topBlock.getData()) + "near of " + "some other banned block");
+                log.info("[LolnetItemControler]: " + player.getName() + "tried to place item: " + topBlock.getTypeId() + "~" + ((int) topBlock.getData()) + "near of " + "some other banned block");
+                return;
+            } else {
+                if (debugMode) {
+                    player.sendMessage("checkallSides() = allowed");
+                }
             }
+
         }
 
-        public boolean checkallSides(Location location,Player player,Block block1) {
+        public boolean checkallSides(Location location, Player player, Block block1, boolean debugMode) {
             List<String> gBanList = (List<String>) config.getList("placeByPlayerDirectlyBelow.Global");
             List<String> banList = (List<String>) config.getList("placeByPlayerDirectlyBelow." + player.getWorld().getName());
             Block top = new Location(location.getWorld(), location.getBlockX(), location.getBlockY() + 1, location.getBlockZ()).getBlock();
-            if (checkIfBannedPlaceNear(block1, top, gBanList, banList))
-            {
+            if (debugMode) {
+                player.sendMessage("checking with: " + block1.getType().toString());
+            }
+            if (checkIfBannedPlaceNear(block1, top, gBanList, banList)) {
                 return true;
+            }
+            if (debugMode) {
+                player.sendMessage(top.getType().toString() + ":allowed");
             }
             Block bottom = new Location(location.getWorld(), location.getBlockX(), location.getBlockY() - 1, location.getBlockZ()).getBlock();
-            if (checkIfBannedPlaceNear(block1, bottom, gBanList, banList))
-            {
+            if (checkIfBannedPlaceNear(block1, bottom, gBanList, banList)) {
                 return true;
             }
-            Block left = new Location(location.getWorld(), location.getBlockX()+1, location.getBlockY(), location.getBlockZ()).getBlock();
-            if (checkIfBannedPlaceNear(block1, left, gBanList, banList))
-            {
+            if (debugMode) {
+                player.sendMessage(bottom.getType().toString() + ":allowed");
+            }
+            Block left = new Location(location.getWorld(), location.getBlockX() + 1, location.getBlockY(), location.getBlockZ()).getBlock();
+            if (checkIfBannedPlaceNear(block1, left, gBanList, banList)) {
                 return true;
             }
-            Block right = new Location(location.getWorld(), location.getBlockX()-1, location.getBlockY(), location.getBlockZ()).getBlock();
-            if (checkIfBannedPlaceNear(block1, right, gBanList, banList))
-            {
+            if (debugMode) {
+                player.sendMessage(left.getType().toString() + ":allowed");
+            }
+            Block right = new Location(location.getWorld(), location.getBlockX() - 1, location.getBlockY(), location.getBlockZ()).getBlock();
+            if (checkIfBannedPlaceNear(block1, right, gBanList, banList)) {
                 return true;
             }
-            Block back = new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()+1).getBlock();
-            if (checkIfBannedPlaceNear(block1, back, gBanList, banList))
-            {
+            if (debugMode) {
+                player.sendMessage(right.getType().toString() + ":allowed");
+            }
+            Block back = new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ() + 1).getBlock();
+            if (checkIfBannedPlaceNear(block1, back, gBanList, banList)) {
                 return true;
             }
-            Block front = new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ()-1).getBlock();
-            if (checkIfBannedPlaceNear(block1, front, gBanList, banList))
-            {
+            if (debugMode) {
+                player.sendMessage(back.getType().toString() + ":allowed");
+            }
+            Block front = new Location(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ() - 1).getBlock();
+            if (checkIfBannedPlaceNear(block1, front, gBanList, banList)) {
                 return true;
+            }
+            if (debugMode) {
+                player.sendMessage(front.getType().toString() + ":allowed");
             }
             return false;
         }
 
-        public boolean checkIfBannedPlaceNear(Block Block1, Block Block2,List<String> gBanList,List<String> banList) {
-            if (Block1 == null || Block2 == null)
-            {
+        public boolean checkIfBannedPlaceNear(Block Block1, Block Block2, List<String> gBanList, List<String> banList) {
+            if (Block1 == null || Block2 == null) {
                 return false;
             }
-            if(isBannedTopPlace(gBanList, Block1, Block2) || isBannedTopPlace(banList, Block2, Block1)) {
+            if (isBannedTopPlace(gBanList, Block1, Block2) || isBannedTopPlace(banList, Block2, Block1)) {
                 return true;
             }
             return false;
@@ -237,11 +287,11 @@ public class LolnetItemControler extends JavaPlugin {
         @EventHandler
         public void onPrepareCraftItemEvent(PrepareItemCraftEvent event) {
             Recipe r = event.getRecipe();
-            int itemID;
-            int meta;
+            String itemID;
+            String meta;
             try {
-                itemID = r.getResult().getTypeId();
-                meta = (int) r.getResult().getData().getData();
+                itemID = r.getResult().getType().toString();
+                meta = Integer.toString(r.getResult().getDurability());
             } catch (Exception e) {
                 return;
             }
@@ -277,27 +327,28 @@ public class LolnetItemControler extends JavaPlugin {
             if (event.isCancelled() || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
                 return;
             }
-            int itemID;
-            int meta;
+            String itemID;
+            String meta;
             Player player = event.getPlayer();
             Block block = event.getClickedBlock();
-            itemID = block.getTypeId();
-            meta = (int) block.getData();
-            if (hasBypass(player, itemID, meta, "playerBlockInteract")) {
-                return;
+            itemID = block.getType().toString();
+            Collection<ItemStack> drops = block.getDrops();
+            for (ItemStack itemStack : drops) {
+                meta = Integer.toString(itemStack.getDurability());
+                if (hasBypass(player, itemID, meta, "playerBlockInteract")) {
+                    return;
+                }
+
+                List<String> gBanList = (List<String>) config.getList("playerBlockInteract.Global");
+                List<String> banList = (List<String>) config.getList("playerBlockInteract." + player.getWorld().getName());
+                if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
+                } else if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
+                    player.sendMessage(ChatColor.RED + "you can't interact with that item in this world");
+                    event.setCancelled(true);
+                    return;
+                }
             }
 
-            List<String> gBanList = (List<String>) config.getList("playerBlockInteract.Global");
-            List<String> banList = (List<String>) config.getList("playerBlockInteract." + player.getWorld().getName());
-            if ((gBanList == null || gBanList.isEmpty()) && (banList == null || banList.isEmpty())) {
-                return;
-            }
-            if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
-                player.sendMessage(ChatColor.RED + "you can't interact with that item in this world");
-                event.setCancelled(true);
-            } else {
-                return;
-            }
         }
 
         @EventHandler
@@ -305,12 +356,12 @@ public class LolnetItemControler extends JavaPlugin {
             if (event.isCancelled() || !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
                 return;
             }
-            int itemID;
-            int meta;
+            String itemID;
+            String meta;
             Player player = event.getPlayer();
             ItemStack itemInHand = player.getInventory().getItemInHand();
-            itemID = itemInHand.getTypeId();
-            meta = (int) (int) itemInHand.getData().getData();
+            itemID = itemInHand.getType().toString();
+            meta = Integer.toString(itemInHand.getDurability());
             if (hasBypass(player, itemID, meta, "playerRightClickItem")) {
                 return;
             }
@@ -323,8 +374,6 @@ public class LolnetItemControler extends JavaPlugin {
             if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                 player.sendMessage(ChatColor.RED + "you can't use that item in this world");
                 event.setCancelled(true);
-            } else {
-                return;
             }
         }
 
@@ -333,12 +382,12 @@ public class LolnetItemControler extends JavaPlugin {
             if (event.isCancelled() || !(event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK)) {
                 return;
             }
-            int itemID;
-            int meta;
+            String itemID;
+            String meta;
             Player player = event.getPlayer();
             ItemStack itemInHand = player.getInventory().getItemInHand();
-            itemID = itemInHand.getTypeId();
-            meta = (int) (int) itemInHand.getData().getData();
+            itemID = itemInHand.getType().toString();
+            meta = Integer.toString(itemInHand.getDurability());
             if (hasBypass(player, itemID, meta, "playerLeftClickItem")) {
                 return;
             }
@@ -351,8 +400,6 @@ public class LolnetItemControler extends JavaPlugin {
             if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                 player.sendMessage(ChatColor.RED + "you can't use that item in this world");
                 event.setCancelled(true);
-            } else {
-                return;
             }
         }
 
@@ -362,8 +409,8 @@ public class LolnetItemControler extends JavaPlugin {
             if (event.isCancelled()) {
                 return;
             }
-            int itemID;
-            int meta;
+            String itemID;
+            String meta;
             Player player = (Player) event.getWhoClicked();
 
             List<String> gBanList = (List<String>) config.getList("playerClickItemInventory.Global");
@@ -375,15 +422,15 @@ public class LolnetItemControler extends JavaPlugin {
 
             for (int i = 0; i < contents.length; i++) {
                 if (contents[i] != null) {
-                    itemID = contents[i].getTypeId();
-                    meta = (int) contents[i].getData().getData();
+                    itemID = contents[i].getType().toString();
+                    meta = Integer.toString(contents[i].getDurability());
                     boolean placedInChest = false;
                     if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                         if (!hasBypass(player, itemID, meta, "playerClickItemInventory")) {
                             contents[i] = null;
                             player.sendMessage(ChatColor.RED + "That Item is banned");
 
-                            log.info("removed item: " + itemID + ":" + meta + " from player: " + player.getName() + " gone forever.");
+                            log.info("removed item: " + itemID + "~" + meta + " from player: " + player.getName() + " gone forever.");
                         }
                     }
                 }
@@ -394,8 +441,8 @@ public class LolnetItemControler extends JavaPlugin {
             if (item == null) {
                 return;
             }
-            itemID = item.getTypeId();
-            meta = (int) item.getData().getData();
+            itemID = item.getType().toString();
+            meta = Integer.toString(item.getDurability());
             if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                 if (!hasBypass(player, itemID, meta, "playerClickItemInventory")) {
                     event.setCursor(null);
@@ -414,8 +461,8 @@ public class LolnetItemControler extends JavaPlugin {
 
             Player player = event.getPlayer();
             ItemStack itemStack = event.getItem().getItemStack();
-            int itemID = itemStack.getTypeId();
-            int meta = (int) itemStack.getData().getData();
+            String itemID = itemStack.getType().toString();
+            String meta = Integer.toString(itemStack.getDurability());
 
             List<String> gBanList = (List<String>) config.getList("playerPickupItem.Global");
             List<String> banList = (List<String>) config.getList("playerPickupItem." + player.getWorld().getName());
@@ -425,21 +472,22 @@ public class LolnetItemControler extends JavaPlugin {
             if (isBanned(gBanList, itemID, meta) || isBanned(banList, itemID, meta)) {
                 if (!hasBypass(player, itemID, meta, "playerPickupItem")) {
                     event.setCancelled(true);
+                    return;
                 }
             }
 
         }
 
-        private boolean hasBypass(Player player, int itemID, int meta, String eventName) {
+        private boolean hasBypass(Player player, String itemID, String meta, String eventName) {
             String worldName = player.getWorld().getName();
             if (player.isOp()
                     || player.hasPermission("ItemControler.fullbypass")
                     || player.hasPermission("ItemControler.bypass." + eventName)
                     || player.hasPermission("ItemControler.bypass." + eventName + "." + worldName)
                     || player.hasPermission("ItemControler.bypass." + eventName + "." + itemID)
-                    || player.hasPermission("ItemControler.bypass." + eventName + "." + itemID + ":" + meta)
+                    || player.hasPermission("ItemControler.bypass." + eventName + "." + itemID + "~" + meta)
                     || player.hasPermission("ItemControler.bypass." + eventName + "." + worldName + "." + itemID)
-                    || player.hasPermission("ItemControler.bypass." + eventName + "." + worldName + "." + itemID + ":" + meta)) {
+                    || player.hasPermission("ItemControler.bypass." + eventName + "." + worldName + "." + itemID + "~" + meta)) {
                 return true;
             }
 
@@ -463,17 +511,17 @@ public class LolnetItemControler extends JavaPlugin {
             if (string.contains(",")) {
 
                 String[] split = string.split(",");
-                int topID = topBlock.getTypeId();
-                int bottomID = bottomBlock.getTypeId();
+                String topID = topBlock.getType().toString();
+                String bottomID = bottomBlock.getType().toString();
                 int topMeta = (int) topBlock.getData();
                 int bottomMeta = (int) bottomBlock.getData();
-                if (split[0].contains(":") || split[1].contains(":")) {
+                if (split[0].contains("~") || split[1].contains("~")) {
                     String[] split1, split2;
-                    if (split[0].contains(":")) {
-                        split1 = split[0].split(":");
+                    if (split[0].contains("~")) {
+                        split1 = split[0].split("~");
                         if (split1[0].equals("" + topID) && split1[1].equals("" + topMeta)) {
-                            if (split[1].contains(":")) {
-                                split2 = split[1].split(":");
+                            if (split[1].contains("~")) {
+                                split2 = split[1].split("~");
                                 if (split2[0].equals("" + bottomID) && split2[1].equals("" + bottomMeta)) {
                                     return true;
                                 }
@@ -484,7 +532,7 @@ public class LolnetItemControler extends JavaPlugin {
                             }
                         }
                     } else {
-                        split2 = split[1].split(":");
+                        split2 = split[1].split("~");
                         if (split2[0].equals("" + bottomID) && split2[1].equals("" + bottomMeta)) {
 
                             if (split[0].equals("" + topID)) {
@@ -505,16 +553,16 @@ public class LolnetItemControler extends JavaPlugin {
         return false;
     }
 
-    public static boolean isBanned(List<String> banList, int itemID, int meta) {
-        //System.out.println(itemID+":"+meta);
+    public static boolean isBanned(List<String> banList, String itemID, String meta) {
+        //System.out.println(itemID+"~"+meta);
         if (banList == null) {
             return false;
         }
         for (String string : banList) {
             //System.out.println(string);
-            if (string.contains(":")) {
+            if (string.contains("~")) {
 
-                List<String> items = Arrays.asList(string.split("\\s*:\\s*"));
+                List<String> items = Arrays.asList(string.split("\\s*~\\s*"));
                 if (items.get(0).equals("" + itemID)) {
 
                     if (items.get(1).equals("" + meta)) {
@@ -537,14 +585,17 @@ public class LolnetItemControler extends JavaPlugin {
 
         Iterator<Recipe> it = getServer().recipeIterator();
         List<String> BanList = (List<String>) getConfig().getList("GlobalCraftBan");
+        if (BanList == null || BanList.isEmpty()) {
+            return;
+        }
         while (it.hasNext()) {
             Recipe itRecipe = it.next();
             ItemStack itemStack = itRecipe.getResult();
-            int itemID = itemStack.getTypeId();
-            int meta = (int) itemStack.getData().getData();
+            String itemID = itemStack.getType().toString();
+            String meta = Integer.toString(itemStack.getDurability());
             if (isBanned(BanList, itemID, meta)) {
                 it.remove();
-                log.info("banned item:" + itemID + ":" + meta);
+                log.info("banned item:" + itemID + "~" + meta);
             }
         }
     }

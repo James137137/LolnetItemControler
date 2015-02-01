@@ -26,4 +26,4 @@ GlobalCraftBan:
   Global:
   world:
 DisableNetherPortalCreation: false
-  
+BlockAllBreakingBlocks: false
