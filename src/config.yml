@@ -25,5 +25,9 @@ playerPickupItem:
 GlobalCraftBan:
   Global:
   world:
+BlockToBlock:
+  Global:
+      -'BUILDCRAFTFACTORY_MACHINEBLOCK~EXTRAUTILITIES_ENDERQUARRY'
+  world:
 DisableNetherPortalCreation: false
 BlockAllBreakingBlocks: false
