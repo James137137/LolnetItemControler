@@ -300,7 +300,8 @@ public class LolnetItemControler extends JavaPlugin {
             if (Block1 == null || Block2 == null) {
                 return false;
             }
-            if (isBannedTopPlace(gBanList, Block1, Block2) || isBannedTopPlace(banList, Block2, Block1)) {
+            if (isBannedTopPlace(gBanList, Block1, Block2) || isBannedTopPlace(banList, Block1, Block2)
+                    || isBannedTopPlace(gBanList, Block2, Block1) || isBannedTopPlace(banList, Block2, Block1)) {
                 return true;
             }
             return false;
